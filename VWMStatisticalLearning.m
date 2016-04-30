@@ -20,7 +20,8 @@ experiment.nTrialsPerBlock = 60;    % Number of trials per block
 
 userDirectory = '/Users/wngi5916/Documents/MATLAB/VWMStatisticalLearning/UserData/';
 saveDirectory = '/Users/wngi5916/Documents/MATLAB/VWMStatisticalLearning/Data/';
-    
+experimentDirectory = '/Users/wngi5916/Documents/MATLAB/VWMStatisticalLearning/';    
+
 % Set up equipment parameters
 
 equipment.viewDist = 770;           % Viewing distance in mm
@@ -88,18 +89,28 @@ timing.delay = 1;
 
 AssertOpenGL;
 
+    % Imaging set-up
+
 screenID = max(Screen('Screens'));
 PsychImaging('PrepareConfiguration');
 PsychImaging('AddTask', 'FinalFormatting', 'DisplayColorCorrection', 'SimpleGamma');
-% PsychImaging('AddTask', 'General', 'EnablePseudoGrayOutput');
 PsychImaging('AddTask', 'General', 'NormalizedHighresColorRange');
 Screen('Preference','SkipSyncTests',2);
+
+    % Window set-up
+    
 [ptbWindow, winRect] = PsychImaging('OpenWindow', screenID, equipment.greyVal);
 PsychColorCorrection('SetEncodingGamma', ptbWindow, equipment.gammaVals);
 [screenWidth, screenHeight] = RectSize(winRect);
 screenCentreX = round(screenWidth/2);
 screenCentreY = round(screenHeight/2);
 flipInterval = Screen('GetFlipInterval', ptbWindow);
+
+    % Text set-up
+    
+Screen('TextFont',ptbWindow,'Courier New');
+Screen('TextSize',ptbWindow,16);
+Screen('TextStyle',ptbWindow,1);        % Bold text
 
 % Enable alpha blending for typical drawing of masked textures
 Screen('BlendFunction', ptbWindow, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -396,23 +407,48 @@ for thisBlock = 1:experiment.nBlocks
             
         for thisItem = 1:stimulus.nColours
 
-            if thisItem ~= thisProbeLocation           % Not the probe item
+            if block.thisShape == 1
+            
+                if thisItem ~= thisProbeLocation           % Not the probe item
 
-                Screen('FrameRect',ptbWindow,colour.probeVal,probeRects(:,thisItem),stimulus.thinPenWidth);
+                    Screen('FrameRect',ptbWindow,colour.probeVal,probeRects(:,thisItem),stimulus.thinPenWidth);
 
-            elseif thisItem == thisProbeLocation       % Is the probe item
+                elseif thisItem == thisProbeLocation       % Is the probe item
 
-                Screen('FrameRect',ptbWindow,colour.probeVal,probeRects(:,thisItem),stimulus.thickPenWidth);
+                    Screen('FrameRect',ptbWindow,colour.probeVal,probeRects(:,thisItem),stimulus.thickPenWidth);
 
+                end
+
+            elseif block.thisShape == 2
+                
+                if thisItem ~= thisProbeLocation
+                    
+                    Screen('FrameOval',ptbWindow,colour.probeVal,probeRects(:,thisItem),stimulus.thinPenWidth);
+                    
+                elseif thisItem == thisProbeLocation
+                    
+                    Screen('FrameOval',ptbWindow,colour.probeVal,probeRects(:,thisItem),stimulus.thickPenWidth);
+                    
+                end
+                
             end
-
+                
         end
 
             % Building the reference display
                 
         for thisColour = 1:stimulus.nColours
+            
+            if block.thisShape == 1
+                
+                Screen('FillRect',ptbWindow,stimulus.colours(thisColour,:),refRects(:,thisColour));
 
-            Screen('FillRect',ptbWindow,stimulus.colours(thisColour,:),refRects(:,thisColour));
+            elseif block.thisShape == 2
+                
+                Screen('FillOval',ptbWindow,stimulus.colours(thisColour,:),refRects(:,thisColour));
+                
+            end
+            
             DrawFormattedText(ptbWindow,num2str(thisColour),'center','center',colour.textVal,[],[],[],[],[],numRects(:,thisColour)');
             
         end
