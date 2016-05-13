@@ -100,4 +100,8 @@ for thisPair = 1:stimulus.nColours^2
 
 end
 
+% For convenience, save the high-probability pair numbers
+
+stimulus.highProbPairs = find(stimulus.probVector == stimulus.highProb);
+
 % Save to participant user file

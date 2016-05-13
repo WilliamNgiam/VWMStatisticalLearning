@@ -4,7 +4,8 @@
 % learning on visual working memory capacity. This experiment is a
 % replication of the retracted Anderson paper
 
-% WN started writing this on 1/4/16
+% WXQN started writing this on 1/4/16
+% WXQN started piloting on 1/5/16
 
 % -------------------------------------------------------------------------
 
@@ -18,13 +19,13 @@ experiment.nTrialsPerBlock = 60;    % Number of trials per block
 
 % Set up participant parameters
 
-userDirectory = '/Users/wngi5916/Documents/MATLAB/VWMStatisticalLearning/UserData/';
-saveDirectory = '/Users/wngi5916/Documents/MATLAB/VWMStatisticalLearning/Data/';
-experimentDirectory = '/Users/wngi5916/Documents/MATLAB/VWMStatisticalLearning/';    
+userDirectory = '/Users/alexh/Documents/MATLAB/William/VWMStatisticalLearning/UserData/';
+saveDirectory = '/Users/alexh/Documents/MATLAB/William/VWMStatisticalLearning/Data/';
+experimentDirectory = '/Users/alexh/Documents/MATLAB/William/VWMStatisticalLearning/';    
 
 % Set up equipment parameters
 
-equipment.viewDist = 770;           % Viewing distance in mm
+equipment.viewDist = 500;           % Viewing distance in mm
 equipment.ppm = 2.7;                % Pixels per mm
 equipment.gammaVals = 1.0./[3.0902 2.4049 2.3194];      % Gamma values for CRT in GT519 (recalibrated 25/9/15)
 
@@ -59,8 +60,8 @@ stimulus.colourList = {'Yellow', 'Blue', 'Red', 'Green', 'Magenta', 'Cyan', 'Whi
 stimulus.colours = [colour.yellow; colour.blue; colour.red; colour.green; colour.magenta; colour.cyan; colour.white; colour.black];
 
 stimulus.size_dva = .9;                     % Colour size (diameter of circle, width of square)
-stimulus.fixationEccentricity_dva = 3;    % Eccentricity of stimulus from fixation point
-stimulus.pairEccentricity_dva = 1;          % Eccentricity between (center of) colour pairs
+stimulus.fixationEccentricity_dva = 1.7;    % Eccentricity of stimulus from fixation point
+stimulus.pairEccentricity_dva = 1.0;          % Eccentricity between (center of) colour pairs
 stimulus.refEccentricity_dva = 1.5;         % Eccentricity between the colour references
 
     % Probabilities
@@ -77,7 +78,7 @@ stimulus.fixationSize_dva = .3;     % Fixation size in degrees of visual angle
     % Probe Rectangle
     
 stimulus.thinPenWidth = 1;          % Thin line for memoranda rect that aren't the probe
-stimulus.thickPenWidth = 5;         % Thick line for the memoranda rect that is the probe
+stimulus.thickPenWidth = 3;         % Thick line for the memoranda rect that is the probe
 
 % Set up temporal parameters
 
@@ -108,12 +109,23 @@ flipInterval = Screen('GetFlipInterval', ptbWindow);
 
     % Text set-up
     
-Screen('TextFont',ptbWindow,'Courier New');
-Screen('TextSize',ptbWindow,16);
+Screen('TextFont',ptbWindow,'Arial');
+Screen('TextSize',ptbWindow,20);
 Screen('TextStyle',ptbWindow,1);        % Bold text
+
+global ptb_drawformattedtext_disableClipping;       % Disable clipping of text 
+ptb_drawformattedtext_disableClipping = 1;
+
+startExperimentText = ['Press any key to begin the experiment.'];
+
+startBlockText = ['Press any key to begin the next block.'];
 
 % Enable alpha blending for typical drawing of masked textures
 Screen('BlendFunction', ptbWindow, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+% Enable multisampling to display anti-aliased images
+
+Screen('OpenWindow',ptbWindow,[],[],[],[],[],6);
 
 % Calculate equipment parameters
 
@@ -192,10 +204,6 @@ else
     
 end
 
-% Instruction Text
-
-
-
 % Set up location rects
 
 fixRect = [0 0 stimulus.fixationSize_pix stimulus.fixationSize_pix];    % Fixation rect
@@ -217,11 +225,11 @@ for thisPair = 1:stimulus.nPairs
         
         if thisColour == 1      % Subtracting half the eccentricity
             
-            colourRects(:,thisPair*2-1) = CenterRectOnPoint(colourRect, theseColourX(thisPair)+screenCentreX, theseColourY(thisPair)+screenCentreY-stimulus.pairEccentricity_pix);
+            colourRects(:,thisPair*2-1) = CenterRectOnPoint(colourRect, theseColourX(thisPair)+screenCentreX, theseColourY(thisPair)+screenCentreY-(stimulus.pairEccentricity_pix/2));
             
         elseif thisColour == 2  % Adding half the eccentricity
             
-            colourRects(:,thisPair*2) = CenterRectOnPoint(colourRect, theseColourX(thisPair)+screenCentreX, theseColourY(thisPair)+screenCentreY+stimulus.pairEccentricity_pix);
+            colourRects(:,thisPair*2) = CenterRectOnPoint(colourRect, theseColourX(thisPair)+screenCentreX, theseColourY(thisPair)+screenCentreY+(stimulus.pairEccentricity_pix/2));
 
         end
         
@@ -242,7 +250,7 @@ refJitter = [-3.5 -2.5 -1.5 -.5 +.5 +1.5 +2.5 +3.5];        % Reference of the c
 
 for thisItem = 1:stimulus.nColours
     
-    refRects(:,thisItem) = CenterRectOnPoint(refRect, screenCentreX+(refJitter(thisItem)*stimulus.refEccentricity_pix),screenCentreY+4*stimulus.refEccentricity_pix);
+    refRects(:,thisItem) = round(CenterRectOnPoint(refRect, screenCentreX+(refJitter(thisItem)*stimulus.refEccentricity_pix),screenCentreY+3*stimulus.refEccentricity_pix));
    
 end
 
@@ -253,11 +261,24 @@ numRects = NaN(4,stimulus.nColours);
 
 for thisItem = 1:stimulus.nColours
     
-    numRects(:,thisItem) = CenterRectOnPoint(numRect, screenCentreX+(refJitter(thisItem)*stimulus.refEccentricity_pix),screenCentreY+4.5*stimulus.refEccentricity_pix);
+    numRects(:,thisItem) = round(CenterRectOnPoint(numRect, screenCentreX+(refJitter(thisItem)*stimulus.refEccentricity_pix),screenCentreY+2.5*stimulus.refEccentricity_pix));
    
 end
 
 % Show instruction text
+
+DrawFormattedText(ptbWindow,startExperimentText,'center','center',colour.textVal);
+startExperimentTime = Screen('Flip',ptbWindow);
+waitResponse = 1;
+
+while waitResponse
+
+    [time, keyCode] = KbWait(-1,2);
+    waitResponse = 0;
+
+end
+
+Screen('Flip',ptbWindow);
 
 % ----------------------------------------------------------------------- %
 
@@ -266,6 +287,9 @@ end
 % ----------------------------------------------------------------------- %
 
 for thisBlock = 1:experiment.nBlocks
+    
+    block.thisBlock = thisBlock;                % Save the block to file.
+    block.thisCondnBlock = ceil(thisBlock/2);   % The nth block of condition.
     
     % Set up what will be cued for this block
     
@@ -289,47 +313,69 @@ for thisBlock = 1:experiment.nBlocks
     
         % Select the colour pairs to be displayed on each trial of the block
         
-        findUniqueColours = 1;
-
-        while findUniqueColours == 1
-
-            findUniquePairs = 1;
-
-            while findUniquePairs == 1
-
-                if block.thisCondition == 1         % Uniform condition
-
-                    block.allPairs(thisTrial,:) = randsample(1:64,4,true,stimulus.unifVector);
-
-                elseif block.thisCondition == 2     % Pattern condition
-
-                    block.allPairs(thisTrial,:) = randsample(1:64,4,true,stimulus.probVector);          % Samples pairs based on assigned probabilities
-
-                end
-
-                if length(unique(block.allPairs(thisTrial,:))) == 4                                 % Ensures four unique numbers sampled
-
-                    break
-
-                end
-
-            end
-
-            block.allColours(thisTrial,:,:) = stimulus.pairVector(block.allPairs(thisTrial,:),:);   % Retrieves the colour pairs that have been sampled
-
-            if length(unique(block.allColours(thisTrial,:))) == 8                                   % Ensures eight unique colours sampled
-
-                break
-
-            end
-
+        selectedPairs = [];
+        
+            % Retrieve probability vector and matrix for manipulation
+        
+        if block.thisCondition == 1         % Uniform condition
+            
+            trialProbVector = stimulus.unifVector;
+            trialProbMatrix = stimulus.unifMatrix;
+            
+        elseif block.thisCondition == 2     % Pattern condition
+            
+            trialProbVector = stimulus.probVector;
+            trialProbMatrix = stimulus.probMatrix;
+            
         end
         
+            % Sample one pair at a time
+            
+        for thisPair = 1:stimulus.nPairs
+            
+            thisSelectedPair = randsample(1:64,1,true,trialProbVector);
+            selectedPairs = [selectedPairs thisSelectedPair];
+            
+            % Set probability of any pair with the selected pairs' colours
+            % to zero
+            
+            thisPairColours = stimulus.pairVector(thisSelectedPair,:);      % Retrieves the colours selected this pair
+            trialProbMatrix(thisPairColours(1),:) = 0;                      % Sets the probabilities in the matrix of each pair ...
+            trialProbMatrix(thisPairColours(2),:) = 0;                      % with the selected colour to zero.
+            trialProbMatrix(:,thisPairColours(1)) = 0;
+            trialProbMatrix(:,thisPairColours(2)) = 0;
+            
+            % Create new probability vector with newly set zeroes
+            
+            trialProbVector = [];
+            
+            for thisRow = 1:stimulus.nColours
+                
+                trialProbVector = [trialProbVector trialProbMatrix(thisRow,:)];
+                
+            end
+            
+        end
+        
+        block.allPairs(thisTrial,:) = selectedPairs;        % Stores the sampled pairs in to trial matrix for the block
+        block.allColours(thisTrial,:,:) = stimulus.pairVector(block.allPairs(thisTrial,:),:);   % Retrieves the colour pairs that have been sampled
+
     end
     
-    % Show block text
+    % Start block text
     
+    DrawFormattedText(ptbWindow,startBlockText,'center','center',colour.textVal);
+    startBlockTime = Screen('Flip',ptbWindow);
+    waitResponse = 1;
+
+    while waitResponse
+
+        [startTime, keyCode] = KbWait(-1,2);
+        waitResponse = 0;
+
+    end
     
+    endTrialTime = startTime;
     
 % ----------------------------------------------------------------------- %    
     
@@ -347,7 +393,7 @@ for thisBlock = 1:experiment.nBlocks
         
         end
         
-        startTrialTime = Screen('Flip',ptbWindow);
+        startTrialTime = Screen('Flip',ptbWindow,endTrialTime+timing.ITI);
         
         % Build the stimuli display on each trial
                         
@@ -383,7 +429,7 @@ for thisBlock = 1:experiment.nBlocks
         end
         
         stimulusDisplayTime = Screen('Flip',ptbWindow,startTrialTime+timing.ITI);
-        
+              
         % Flip to blank for delay
         
         if stimulus.fixationOn
@@ -438,7 +484,7 @@ for thisBlock = 1:experiment.nBlocks
             % Building the reference display
                 
         for thisColour = 1:stimulus.nColours
-            
+                 
             if block.thisShape == 1
                 
                 Screen('FillRect',ptbWindow,stimulus.colours(thisColour,:),refRects(:,thisColour));
@@ -450,7 +496,7 @@ for thisBlock = 1:experiment.nBlocks
             end
             
             DrawFormattedText(ptbWindow,num2str(thisColour),'center','center',colour.textVal,[],[],[],[],[],numRects(:,thisColour)');
-            
+
         end
 
             % Draw the screen
@@ -495,19 +541,50 @@ for thisBlock = 1:experiment.nBlocks
             
         end
         
+        endTrialTime = Screen('Flip',ptbWindow);
+        
     end
     
     % Save a block file
     
     cd(saveDirectory);
     blockFileName = [participant.ID '_VWMStatLearning_' num2str(thisBlock) '.mat'];
-    save(blockFileName, 'block', 'experiment', 'equipment', 'colour', 'stimulus', 'timing', 'participant')
+    save(blockFileName, 'block', 'experiment', 'equipment', 'colour', 'stimulus', 'timing', 'participant','startExperimentTime')
+    
+    % Completed block text
+    
+    completedBlockText = ['You have completed ' num2str(block.thisBlock) ' out of ' num2str(experiment.nBlocks) ' blocks.\n' ...
+        'Press any key to continue.'];
+    
+    DrawFormattedText(ptbWindow,completedBlockText,'center','center',colour.textVal);
+    Screen('Flip',ptbWindow);
+    waitResponse = 1;
+
+    while waitResponse
+
+        [time, keyCode] = KbWait(-1,2);
+        waitResponse = 0;
+
+    end
+    
     
 end
 
 % Save user file
 
 cd(userDirectory);
-userFileName = [participant.ID '_VWMStatLearning.mat'];
+userFileName = [participant.ID '_VWMStatLearning_Exp1.mat'];
 save(userFileName, 'participant', 'experiment', 'equipment', 'colour', 'stimulus', 'timing');
+
+% Completed Experiment Text
+
+completedBlockText = ['You have completed the experiment.\n' ...
+    'Press any key to continue.'];
+
+DrawFormattedText(ptbWindow,completedBlockText,'center','center',colour.textVal);
+Screen('Flip',ptbWindow);
+waitResponse = 1;
+
+Screen('CloseAll');
+close all;
 
