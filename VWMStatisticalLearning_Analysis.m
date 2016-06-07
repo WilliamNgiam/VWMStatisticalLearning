@@ -46,7 +46,6 @@ nCorr_patt = NaN(numParticipants,10);
 pCorr_patt = NaN(numParticipants,10);
 K_patt = NaN(numParticipants,10);
 
-
 for thisNum = 1:numParticipants
 
     for thisFile = 1:nFiles
@@ -145,6 +144,8 @@ end
 
 % Combined figure of all participants (better for low n)
 
+figure('Color','white','Name','Mean Data');
+
 for thisParticipant = 1:numParticipants
     
     subplot(numParticipants,2,thisParticipant*2-1);
@@ -155,7 +156,12 @@ for thisParticipant = 1:numParticipants
     set(gca,'YMinorTick', 'on')
     hold on;
     plot(nCorr_patt(thisParticipant,:),'rx-');
-    legend(Conditions,'Location','NorthOutside');
+    
+%     if thisParticipant == 1
+%     
+%         legend(Conditions,'Location','NorthOutside');
+%         
+%     end
     
     subplot(numParticipants,2,thisParticipant*2);
     plot(K_unif(thisParticipant,:),'bx-');
@@ -166,7 +172,12 @@ for thisParticipant = 1:numParticipants
     hold on;
     plot(K_patt(thisParticipant,:),'rx-');
     hold off;
-    legend(Conditions,'Location','NorthOutside');
+%     
+%     if thisParticipant == 1
+%         
+%         legend(Conditions,'Location','NorthOutside');
+%         
+%     end
     
 end
 
@@ -192,6 +203,10 @@ set(gca,'YMinorTick','on');
 hold on;
 plot(mean(K_patt),'rx-');
 legend(Conditions,'Location','NorthOutside');
+
+% Checking the number of trials of low probability pairs and number of
+% trials that contained only high probability pairs in each block for each
+% participant.
 
 data.allLowProbPairsNum = NaN(numParticipants,9);
 data.allHighProbPairTrialsNum = NaN(numParticipants,9);
@@ -252,3 +267,73 @@ for thisParticipantNum = 1:numParticipants
     data.allHighProbPairTrialsNum(thisParticipantNum,:) = allHighProbPairTrialsNum;
     
 end
+
+% Testing awareness
+
+cd('/Users/alexh/Documents/MATLAB/William/VWMStatisticalLearning/UserData/');
+
+theseFiles = what;
+theseFiles = theseFiles.mat;
+nFiles = numel(theseFiles);
+load(theseFiles{1});
+participantID = [];
+
+for thisFile = 1:nFiles
+
+load(theseFiles{thisFile});
+thisID = participant.ID;
+
+participantID = [participantID; thisID];
+
+end
+
+participantID = unique(cellstr(participantID))';
+numParticipants = numel(participantID);
+
+for thisParticipantNum = 1:numParticipants
+    
+    awareness.ifCorrect = [];
+    
+    % Retrieve the high probability pairs
+    
+    load(theseFiles{thisParticipantNum});
+    
+    % Retrieve their awareness test responses
+    
+    for thisColour = 1:stimulus.nColours
+    
+        theirResponse = awareness.responseColours(thisColour);          % Retrieve their response to what was paired to this Colour
+        thisPosition = find(stimulus.highProbPairs_Code == thisColour); % Retrieve the position of the colour in the 4x2 matrix
+        
+        if thisPosition > 4
+            
+            thisColourPairPosition = thisPosition - 4;
+            
+        elseif thisPosition < 5
+            
+            thisColourPairPosition = thisPosition + 4;
+            
+        end
+        
+        theColourPair = stimulus.highProbPairs_Code(thisColourPairPosition);
+        
+        if theirResponse == theColourPair       % Correctly identified the pair
+            
+            awareness.ifCorrect = [awareness.ifCorrect 1];
+            
+        elseif theirResponse ~= theColourPair   % Did not identify the pair
+            
+            awareness.ifCorrect = [awareness.ifCorrect 0];
+            
+        end
+        
+    end
+    
+    % Save and attach awareness to participant
+    
+    userFileName = [participant.ID '_VWMStatLearning_Exp1.mat'];
+    save(userFileName, 'participant', 'experiment', 'equipment', 'colour', 'stimulus', 'timing', 'awareness');
+
+end        
+        
+            

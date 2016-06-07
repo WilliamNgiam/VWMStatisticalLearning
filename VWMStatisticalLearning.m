@@ -182,12 +182,12 @@ if newUser
         
             whichCondnFirst = ceil((mod(str2num(participant.ID),4)+1)/2);
             
-            if whichCondnFirst == 1
+            if whichCondnFirst == 1     % Uniform first
                 
                 participant.condnOrder = repmat([1,2],1,9);
                 participant.condnOrder = [participant.condnOrder 1 1];  % Make the final two blocks uniform conditions
                 
-            elseif whichCondnFirst == 2
+            elseif whichCondnFirst == 2 % Pattern first
                 
                 participant.condnOrder = repmat([2,1],1,9);
                 participant.condnOrder = [participant.condnOrder 1 1];  % Make the final two blocks uniform conditions
@@ -210,6 +210,7 @@ fixRect = [0 0 stimulus.fixationSize_pix stimulus.fixationSize_pix];    % Fixati
 fixRect = CenterRectOnPoint(fixRect, screenCentreX, screenCentreY);     % Centred in the middle of the screen
 
 colourRect = [0 0 stimulus.size_pix stimulus.size_pix];                 % Colour stimulus rect
+awareRect = CenterRectOnPoint(colourRect, screenCentreX, screenCentreY);
 
 % Build location rects of the colours going clockwise starting from north
 
@@ -308,6 +309,7 @@ for thisBlock = 1:experiment.nBlocks
     block.allResponseKey = NaN(experiment.nTrialsPerBlock,1);     % Creating an array to save responses (can use a blank vector as well)
     block.allResponseColour = NaN(experiment.nTrialsPerBlock,1);
     block.allCorrect = NaN(experiment.nTrialsPerBlock,1);
+    block.allResponseTimes = NaN(experiment.nTrialsPerBlock,1);
     
     for thisTrial = 1:experiment.nTrialsPerBlock
     
@@ -518,6 +520,10 @@ for thisBlock = 1:experiment.nBlocks
             [keySecs, keyCode] = KbWait(-1,2);
             pressedKey = find(keyCode);
 
+            if length(pressedKey) ~= 1      % In case, participant accidentally presses two buttons simultaneously
+                continue
+            end
+                          
             if isempty(find(equipment.responseKeys == pressedKey)) == 0     % While loop will only break when a response Key is pressed
                 waitResponse = 0;
             end
@@ -528,6 +534,7 @@ for thisBlock = 1:experiment.nBlocks
         
         block.allResponseKey(thisTrial) = pressedKey;
         block.allResponseColour(thisTrial) = pressedKey - 29;
+        block.allResponseTimes(thisTrial) = keySecs - responseTime;
         
         % Check if correct
         
@@ -552,21 +559,146 @@ for thisBlock = 1:experiment.nBlocks
     save(blockFileName, 'block', 'experiment', 'equipment', 'colour', 'stimulus', 'timing', 'participant','startExperimentTime')
     
     % Completed block text
-    
-    completedBlockText = ['You have completed ' num2str(block.thisBlock) ' out of ' num2str(experiment.nBlocks) ' blocks.\n' ...
-        'Press any key to continue.'];
-    
-    DrawFormattedText(ptbWindow,completedBlockText,'center','center',colour.textVal);
-    Screen('Flip',ptbWindow);
-    waitResponse = 1;
 
-    while waitResponse
+    if mod(block.thisBlock,4) == 0
+        
+        takeBreakText = ['You have completed ' num2str(block.thisBlock) ' out of ' num2str(experiment.nBlocks) ' blocks.\n' ...
+            'Take a break for a couple minutes.'];
+            
+        DrawFormattedText(ptbWindow,takeBreakText,'center','center',colour.textVal);
+        Screen('Flip',ptbWindow);
+        WaitSecs(120);
+        
+        completedBlockText = ['You have completed ' num2str(block.thisBlock) ' out of ' num2str(experiment.nBlocks) ' blocks.\n' ...
+            'Press any key to continue.'];
+        DrawFormattedText(ptbWindow,completedBlockText,'center','center',colour.textVal);
+        Screen('Flip',ptbWindow);
+        waitResponse = 1;
+        
+        while waitResponse
 
-        [time, keyCode] = KbWait(-1,2);
-        waitResponse = 0;
+            [time, keyCode] = KbWait(-1,2);
+            waitResponse = 0;
+
+        end
+            
+    else
+    
+        completedBlockText = ['You have completed ' num2str(block.thisBlock) ' out of ' num2str(experiment.nBlocks) ' blocks.\n' ...
+            'Press any key to continue.'];
+
+        DrawFormattedText(ptbWindow,completedBlockText,'center','center',colour.textVal);
+        Screen('Flip',ptbWindow);
+        waitResponse = 1;
+
+        while waitResponse
+
+            [time, keyCode] = KbWait(-1,2);
+            waitResponse = 0;
+
+        end
+    
+    end
+    
+end
+
+% Test explicit awareness of blocks
+
+% % Instruction text
+
+awarenessText = ['You will be presented with a colour in the middle of the screen.\n' ...
+    'Respond with which colour you think appeared most with that colour.\n' ...
+    'Press any key to continue.'];
+
+DrawFormattedText(ptbWindow,awarenessText,'center','center',colour.textVal);
+Screen('Flip',ptbWindow);
+waitResponse = 1;
+
+while waitResponse
+
+    [time, keyCode] = KbWait(-1,2);
+    waitResponse = 0;
+
+end    
+
+awareness.responses = [];
+awareness.responseColours = [];
+
+for thisTestColour = 1:stimulus.nColours
+    
+    % Retrieve which shape had pattern configurations
+    
+    if whichCondnFirst == 2
+        
+        testShape = whichShapeFirst;
+        
+    elseif whichCondnFirst == 1
+        
+        testShape = 3-whichShapeFirst;
+        
+    end
+     
+    % Draw question text above
+    
+    questionText = ['Which colour was most likely to appear with this colour shown?'];
+    
+    DrawFormattedText(ptbWindow,questionText,'center',screenCentreY - 1*stimulus.refEccentricity_pix,colour.textVal);
+    
+    % Present colour in the middle
+    
+    if testShape == 1
+                                              
+        Screen('FillRect',ptbWindow,[stimulus.colours(thisTestColour,:)],awareRect);
+
+    elseif testShape == 2
+
+        Screen('FillOval',ptbWindow,[stimulus.colours(thisTestColour,:)],awareRect);
+
+    end
+
+    % Present reference values
+    
+    for thisColour = 1:stimulus.nColours
+                 
+        if testShape == 1
+
+            Screen('FillRect',ptbWindow,stimulus.colours(thisColour,:),refRects(:,thisColour));
+
+        elseif testShape == 2
+
+            Screen('FillOval',ptbWindow,stimulus.colours(thisColour,:),refRects(:,thisColour));
+
+        end
+
+        DrawFormattedText(ptbWindow,num2str(thisColour),'center','center',colour.textVal,[],[],[],[],[],numRects(:,thisColour)');
 
     end
     
+    Screen('Flip',ptbWindow);
+    
+    % Record response
+    
+    waitResponse = 1;
+    
+    while waitResponse
+
+        [keySecs, keyCode] = KbWait(-1,2);
+        pressedKey = find(keyCode);
+
+        if length(pressedKey) ~= 1
+            continue
+        end
+        
+        if isempty(find(equipment.responseKeys == pressedKey)) == 0     % While loop will only break when a response Key is pressed
+            waitResponse = 0;
+        end
+
+    end
+
+    % Save response
+    
+    awareness.responses = [awareness.responses pressedKey];
+    awareness.responseColours = [awareness.responseColours pressedKey-29];
     
 end
 
@@ -574,7 +706,7 @@ end
 
 cd(userDirectory);
 userFileName = [participant.ID '_VWMStatLearning_Exp1.mat'];
-save(userFileName, 'participant', 'experiment', 'equipment', 'colour', 'stimulus', 'timing');
+save(userFileName, 'participant', 'experiment', 'equipment', 'colour', 'stimulus', 'timing', 'awareness');
 
 % Completed Experiment Text
 
