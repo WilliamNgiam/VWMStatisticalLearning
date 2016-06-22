@@ -6,6 +6,7 @@
 
 % WXQN started writing this on 1/4/16
 % WXQN started piloting on 1/5/16
+% WXQN set up code for UChicago on 22/6/16
 
 % -------------------------------------------------------------------------
 
@@ -19,9 +20,9 @@ experiment.nTrialsPerBlock = 60;    % Number of trials per block
 
 % Set up participant parameters
 
-userDirectory = '/Users/alexh/Documents/MATLAB/William/VWMStatisticalLearning/UserData/';
-saveDirectory = '/Users/alexh/Documents/MATLAB/William/VWMStatisticalLearning/Data/';
-experimentDirectory = '/Users/alexh/Documents/MATLAB/William/VWMStatisticalLearning/';    
+userDirectory = 'C:\Users\Dirk VU\Documents\MATLAB\Will\VWMStatisticalLearning\UserData';
+saveDirectory = 'C:\Users\Dirk VU\Documents\MATLAB\Will\VWMStatisticalLearning\Data';
+experimentDirectory = 'C:\Users\Dirk VU\Documents\MATLAB\Will\VWMStatisticalLearning';    
 
 % Set up equipment parameters
 
@@ -33,7 +34,7 @@ equipment.greyVal = .5;             % Grey background
 equipment.blackVal = 0;
 equipment.whiteVal = 1;
 
-equipment.responseKeys = 30:37;     % Responses key for 1 to 8 on Macbook Pro keyboard
+equipment.responseKeys = 49:56;     % Responses key for 1 to 8 on Windows Keyboard (30:37 on Macbook)
 
 % Set up colour parameters
 
@@ -61,7 +62,7 @@ stimulus.colours = [colour.yellow; colour.blue; colour.red; colour.green; colour
 
 stimulus.size_dva = .9;                     % Colour size (diameter of circle, width of square)
 stimulus.fixationEccentricity_dva = 1.7;    % Eccentricity of stimulus from fixation point
-stimulus.pairEccentricity_dva = 1.0;          % Eccentricity between (center of) colour pairs
+stimulus.pairEccentricity_dva = 1.0;        % Eccentricity between (center of) colour pairs
 stimulus.refEccentricity_dva = 1.5;         % Eccentricity between the colour references
 
     % Probabilities
@@ -150,7 +151,7 @@ while true
 end
 
 cd(userDirectory);
-participant.userFile = [userDirectory participant.ID '_VWMStatLearning_Exp1.mat'];
+participant.userFile = [participant.ID '_VWMStatLearning_Exp1_UserData.mat'];
 newUser = ~exist(participant.userFile,'file');
 
 if newUser
@@ -388,6 +389,7 @@ for thisBlock = 1:experiment.nBlocks
     for thisTrial = 1:experiment.nTrialsPerBlock
         
         % Start trial with fixation point/blank
+        HideCursor;
         
         if stimulus.fixationOn
                 
@@ -497,7 +499,7 @@ for thisBlock = 1:experiment.nBlocks
                 
             end
             
-            DrawFormattedText(ptbWindow,num2str(thisColour),'center','center',colour.textVal,[],[],[],[],[],numRects(:,thisColour)');
+%             DrawFormattedText(ptbWindow,num2str(thisColour),'center','center',colour.textVal,[],[],[],[],[],numRects(:,thisColour)');
 
         end
 
@@ -512,29 +514,55 @@ for thisBlock = 1:experiment.nBlocks
         responseTime = Screen('Flip',ptbWindow,responseDelayTime+timing.delay);
         
         % Get participant response
+% For mouse click responses        
+
+        ShowCursor;
+        SetMouse(screenCentreX,screenCentreY,ptbWindow);
+        CheckResponse = zeros(1,stimulus.nColours);
         
-        waitResponse = 1;
-
-        while waitResponse
-
-            [keySecs, keyCode] = KbWait(-1,2);
-            pressedKey = find(keyCode);
-
-            if length(pressedKey) ~= 1      % In case, participant accidentally presses two buttons simultaneously
-                continue
+        while ~any(CheckResponse)
+            
+            [~,xClickResponse,yClickResponse] = GetClicks(ptbWindow,0);     % Retrieves x- and y-coordinates of mouse click
+            clickSecs = GetSecs;
+        
+            for thisColour = 1:stimulus.nColours;
+                
+                CheckResponse(thisColour) = IsInRect(xClickResponse,yClickResponse,refRects(:,thisColour));     % Tests if mouse click is inside aperture of each successive item
+                
             end
-                          
-            if isempty(find(equipment.responseKeys == pressedKey)) == 0     % While loop will only break when a response Key is pressed
-                waitResponse = 0;
-            end
-
+            
         end
         
-        % Save response
+        responseColour = find(CheckResponse);
+
+% For keyboard responses   
+%        
+%         waitResponse = 1;
+% 
+%         while waitResponse
+% 
+%             [keySecs, keyCode] = KbWait(-1,2);
+%             pressedKey = find(keyCode);
+% 
+%             if length(pressedKey) ~= 1      % In case, participant accidentally presses two buttons simultaneously
+%                 continue
+%             end
+%                           
+%             if isempty(find(equipment.responseKeys == pressedKey)) == 0     % While loop will only break when a response Key is pressed
+%                 waitResponse = 0;
+%             end
+% 
+%         end
         
-        block.allResponseKey(thisTrial) = pressedKey;
-        block.allResponseColour(thisTrial) = pressedKey - 29;
-        block.allResponseTimes(thisTrial) = keySecs - responseTime;
+        % Save response
+% For mouse click responses
+        block.allResponseColour(thisTrial) = responseColour;
+        block.allResponseTimes(thisTrial) = clickSecs - responseTime;
+        
+% For keyboard responses
+%        block.allResponseKey(thisTrial) = pressedKey;
+%        block.allResponseColour(thisTrial) = pressedKey - 29;
+%        block.allResponseTimes(thisTrial) = keySecs - responseTime;
         
         % Check if correct
         
@@ -677,28 +705,52 @@ for thisTestColour = 1:stimulus.nColours
     Screen('Flip',ptbWindow);
     
     % Record response
-    
-    waitResponse = 1;
-    
-    while waitResponse
+% For mouse click responses 
+    ShowCursor;
+    SetMouse(screenCentreX,screenCentreY,ptbWindow);
+    CheckResponse = zeros(1,stimulus.nColours);
 
-        [keySecs, keyCode] = KbWait(-1,2);
-        pressedKey = find(keyCode);
+    while ~any(CheckResponse)
 
-        if length(pressedKey) ~= 1
-            continue
-        end
-        
-        if isempty(find(equipment.responseKeys == pressedKey)) == 0     % While loop will only break when a response Key is pressed
-            waitResponse = 0;
+        [~,xClickResponse,yClickResponse] = GetClicks(ptbWindow,0);     % Retrieves x- and y-coordinates of mouse click
+        clickSecs = GetSecs;
+
+        for thisColour = 1:stimulus.nColours;
+
+            CheckResponse(thisColour) = IsInRect(xClickResponse,yClickResponse,refRects(:,thisColour));     % Tests if mouse click is inside aperture of each successive item
+
         end
 
     end
 
-    % Save response
-    
-    awareness.responses = [awareness.responses pressedKey];
-    awareness.responseColours = [awareness.responseColours pressedKey-29];
+    responseColour = find(CheckResponse);
+
+% For keyboard responses    
+%     waitResponse = 1;
+%     
+%     while waitResponse
+% 
+%         [keySecs, keyCode] = KbWait(-1,2);
+%         pressedKey = find(keyCode);
+% 
+%         if length(pressedKey) ~= 1
+%             continue
+%         end
+%         
+%         if isempty(find(equipment.responseKeys == pressedKey)) == 0     % While loop will only break when a response Key is pressed
+%             waitResponse = 0;
+%         end
+% 
+%     end
+% 
+     % Save response
+% For mouse click responses
+
+    awareness.responses = [awareness.responses responseColour];
+
+% For keyboard responses    
+%     awareness.responses = [awareness.responses pressedKey];
+%     awareness.responseColours = [awareness.responseColours pressedKey-29];
     
 end
 

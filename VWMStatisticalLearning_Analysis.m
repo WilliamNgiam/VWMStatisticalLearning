@@ -13,7 +13,7 @@
 
 % ----------------------------------------------------------------------- %
 
-cd('/Users/alexh/Documents/MATLAB/William/VWMStatisticalLearning/Data/');
+cd('C:\Users\Dirk VU\Documents\MATLAB\Will\VWMStatisticalLearning\Data');
 
 theseFiles = what;
 theseFiles = theseFiles.mat;
@@ -61,6 +61,7 @@ for thisNum = 1:numParticipants
             nCorr(thisNum,thisBlock) = sum(block.allCorrect);
             pCorr(thisNum,thisBlock) = sum(block.allCorrect)/experiment.nTrialsPerBlock;
             K(thisNum,thisBlock) = (64*pCorr(thisNum,thisBlock)-8)/7;
+            
         end
         
     end
@@ -247,12 +248,12 @@ for thisParticipantNum = 1:numParticipants
     %           disp('a');
     %           disp(a);
 
-                disp('nLowProbPairs');
+                disp('nLowProbPairs');          % Number of low probability pairs shown
                 nLowProbPairs = numel(find(a == 0));
                 disp(nLowProbPairs);
                 allLowProbPairsNum = [allLowProbPairsNum nLowProbPairs];
 
-                disp('nHighProbPairTrials');
+                disp('nHighProbPairTrials');    % Number of trials with only high probability pairs shown
                 nHighProbPairTrials = sum(sum(a')==4);
                 disp(nHighProbPairTrials);
                 allHighProbPairTrialsNum = [allHighProbPairTrialsNum nHighProbPairTrials];
