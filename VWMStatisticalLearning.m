@@ -20,14 +20,14 @@ experiment.nTrialsPerBlock = 60;    % Number of trials per block
 
 % Set up participant parameters
 
-userDirectory = 'C:\Users\Dirk VU\Documents\MATLAB\Will\VWMStatisticalLearning\UserData';
-saveDirectory = 'C:\Users\Dirk VU\Documents\MATLAB\Will\VWMStatisticalLearning\Data';
-experimentDirectory = 'C:\Users\Dirk VU\Documents\MATLAB\Will\VWMStatisticalLearning';    
+userDirectory = 'C:\Users\AwhVogelLab\Documents\MATLAB\Will\VWMStatisticalLearning\UserData';
+saveDirectory = 'C:\Users\AwhVogelLab\Documents\MATLAB\Will\VWMStatisticalLearning\Data';
+experimentDirectory = 'C:\Users\AwhVogelLab\Documents\MATLAB\Will\VWMStatisticalLearning';    
 
 % Set up equipment parameters
 
 equipment.viewDist = 500;           % Viewing distance in mm
-equipment.ppm = 2.7;                % Pixels per mm
+equipment.ppm = 3.6;                % Pixels per mm - Measured at UChicago on 22/6/16
 equipment.gammaVals = 1.0./[3.0902 2.4049 2.3194];      % Gamma values for CRT in GT519 (recalibrated 25/9/15)
 
 equipment.greyVal = .5;             % Grey background
@@ -87,6 +87,19 @@ timing.ITI = .75;       % Inter-trial interval
 timing.memory = 1;
 timing.delay = 1;
 
+% Get participant ID
+
+while true
+    participant.ID = upper(input('Enter two-digit participant number: ', 's'));
+    if length(participant.ID)==2
+        break
+    end
+end
+
+cd(userDirectory);
+participant.userFile = [participant.ID '_VWMStatLearning_Exp1.mat'];
+newUser = ~exist(participant.userFile,'file');
+
 % Set up Psychtoolbox Pipeline
 
 AssertOpenGL;
@@ -97,11 +110,11 @@ screenID = max(Screen('Screens'));
 PsychImaging('PrepareConfiguration');
 PsychImaging('AddTask', 'FinalFormatting', 'DisplayColorCorrection', 'SimpleGamma');
 PsychImaging('AddTask', 'General', 'NormalizedHighresColorRange');
-Screen('Preference','SkipSyncTests',2);
+Screen('Preference','SkipSyncTests',0);
 
     % Window set-up
     
-[ptbWindow, winRect] = PsychImaging('OpenWindow', screenID, equipment.greyVal);
+[ptbWindow, winRect] = PsychImaging('OpenWindow', screenID, equipment.greyVal,[],[],[],[],6);
 PsychColorCorrection('SetEncodingGamma', ptbWindow, equipment.gammaVals);
 [screenWidth, screenHeight] = RectSize(winRect);
 screenCentreX = round(screenWidth/2);
@@ -117,7 +130,9 @@ Screen('TextStyle',ptbWindow,1);        % Bold text
 global ptb_drawformattedtext_disableClipping;       % Disable clipping of text 
 ptb_drawformattedtext_disableClipping = 1;
 
-startExperimentText = ['Press any key to begin the experiment.'];
+startExperimentText = ['On each trial, you will be shown eight unique colors for a short time. \n\n' ...
+    'You will be prompted to click on which color you think was shown at one of these locations. \n\n' ...
+    'Press any key to begin the experiment.'];
 
 startBlockText = ['Press any key to begin the next block.'];
 
@@ -125,8 +140,8 @@ startBlockText = ['Press any key to begin the next block.'];
 Screen('BlendFunction', ptbWindow, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 % Enable multisampling to display anti-aliased images
-
-Screen('OpenWindow',ptbWindow,[],[],[],[],[],6);
+% 
+% Screen('OpenWindow',ptbWindow,[],[],[],[],[],6);
 
 % Calculate equipment parameters
 
@@ -140,19 +155,6 @@ stimulus.fixationEccentricity_pix = round(stimulus.fixationEccentricity_dva*equi
 stimulus.fixationSize_pix = stimulus.fixationSize_dva*equipment.ppd;                            % Fixation dot size in pixels
 stimulus.pairEccentricity_pix = round(stimulus.pairEccentricity_dva*equipment.ppd);             % Eccentricity between colour pairs in pixels
 stimulus.refEccentricity_pix = round(stimulus.refEccentricity_dva*equipment.ppd);               % Eccentricity between colour references in response screen
-
-% Get participant ID
-
-while true
-    participant.ID = upper(input('Enter two-digit participant number: ', 's'));
-    if length(participant.ID)==2
-        break
-    end
-end
-
-cd(userDirectory);
-participant.userFile = [participant.ID '_VWMStatLearning_Exp1_UserData.mat'];
-newUser = ~exist(participant.userFile,'file');
 
 if newUser
     
@@ -516,7 +518,7 @@ for thisBlock = 1:experiment.nBlocks
         % Get participant response
 % For mouse click responses        
 
-        ShowCursor;
+        ShowCursor(0);
         SetMouse(screenCentreX,screenCentreY,ptbWindow);
         CheckResponse = zeros(1,stimulus.nColours);
         
@@ -590,29 +592,38 @@ for thisBlock = 1:experiment.nBlocks
 
     if mod(block.thisBlock,4) == 0
         
-        takeBreakText = ['You have completed ' num2str(block.thisBlock) ' out of ' num2str(experiment.nBlocks) ' blocks.\n' ...
-            'Take a break for a couple minutes.'];
+        if block.thisBlock ~= experiment.nBlocks
             
-        DrawFormattedText(ptbWindow,takeBreakText,'center','center',colour.textVal);
-        Screen('Flip',ptbWindow);
-        WaitSecs(120);
-        
-        completedBlockText = ['You have completed ' num2str(block.thisBlock) ' out of ' num2str(experiment.nBlocks) ' blocks.\n' ...
-            'Press any key to continue.'];
-        DrawFormattedText(ptbWindow,completedBlockText,'center','center',colour.textVal);
-        Screen('Flip',ptbWindow);
-        waitResponse = 1;
-        
-        while waitResponse
+            takeBreakText = ['You have completed ' num2str(block.thisBlock) ' out of ' num2str(experiment.nBlocks) ' blocks.\n\n' ...
+                'Please take a break for a few minutes.'];
 
-            [time, keyCode] = KbWait(-1,2);
-            waitResponse = 0;
+            DrawFormattedText(ptbWindow,takeBreakText,'center','center',colour.textVal);
+            Screen('Flip',ptbWindow);
+            WaitSecs(120);
 
+            completedBlockText = ['You have completed ' num2str(block.thisBlock) ' out of ' num2str(experiment.nBlocks) ' blocks.\n\n' ...
+                'Press any key to continue.'];
+            DrawFormattedText(ptbWindow,completedBlockText,'center','center',colour.textVal);
+            Screen('Flip',ptbWindow);
+            waitResponse = 1;
+
+            while waitResponse
+
+                [time, keyCode] = KbWait(-1,2);
+                waitResponse = 0;
+
+            end
+            
+        elseif block.thisBlock == experiment.nBlocks
+            
+            finishAllText = ['You have completed all blocks in the experiment.\n\n' ...
+                'Press any key to continue on to the next part.'];
+            
         end
-            
+        
     else
     
-        completedBlockText = ['You have completed ' num2str(block.thisBlock) ' out of ' num2str(experiment.nBlocks) ' blocks.\n' ...
+        completedBlockText = ['You have completed ' num2str(block.thisBlock) ' out of ' num2str(experiment.nBlocks) ' blocks.\n\n' ...
             'Press any key to continue.'];
 
         DrawFormattedText(ptbWindow,completedBlockText,'center','center',colour.textVal);
@@ -634,8 +645,8 @@ end
 
 % % Instruction text
 
-awarenessText = ['You will be presented with a colour in the middle of the screen.\n' ...
-    'Respond with which colour you think appeared most with that colour.\n' ...
+awarenessText = ['You will be presented with a colour in the middle of the screen.\n\n' ...
+    'Click on which colour you think appeared most commonly with that colour.\n\n' ...
     'Press any key to continue.'];
 
 DrawFormattedText(ptbWindow,awarenessText,'center','center',colour.textVal);
@@ -746,7 +757,7 @@ for thisTestColour = 1:stimulus.nColours
      % Save response
 % For mouse click responses
 
-    awareness.responses = [awareness.responses responseColour];
+    awareness.responseColours = [awareness.responses responseColour];
 
 % For keyboard responses    
 %     awareness.responses = [awareness.responses pressedKey];
