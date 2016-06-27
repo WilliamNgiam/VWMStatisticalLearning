@@ -709,7 +709,7 @@ for thisTestColour = 1:stimulus.nColours
 
         end
 
-        DrawFormattedText(ptbWindow,num2str(thisColour),'center','center',colour.textVal,[],[],[],[],[],numRects(:,thisColour)');
+%         DrawFormattedText(ptbWindow,num2str(thisColour),'center','center',colour.textVal,[],[],[],[],[],numRects(:,thisColour)');
 
     end
     
@@ -757,7 +757,7 @@ for thisTestColour = 1:stimulus.nColours
      % Save response
 % For mouse click responses
 
-    awareness.responseColours = [awareness.responses responseColour];
+    awareness.responseColours = [awareness.responseColours responseColour];
 
 % For keyboard responses    
 %     awareness.responses = [awareness.responses pressedKey];
