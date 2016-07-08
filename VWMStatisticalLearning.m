@@ -26,7 +26,7 @@ experimentDirectory = 'C:\Users\AwhVogelLab\Documents\MATLAB\Will\VWMStatistical
 
 % Set up equipment parameters
 
-equipment.viewDist = 500;           % Viewing distance in mm
+equipment.viewDist = 700;           % Viewing distance in mm
 equipment.ppm = 3.6;                % Pixels per mm - Measured at UChicago on 22/6/16
 equipment.gammaVals = 1.0./[3.0902 2.4049 2.3194];      % Gamma values for CRT in GT519 (recalibrated 25/9/15)
 
@@ -88,6 +88,27 @@ timing.memory = 1;
 timing.delay = 1;
 
 % Get participant ID
+
+while true
+    participant.initials = upper(input('Enter participant initials: ', 's'));
+    if length(participant.initials)==2
+        break
+    end
+end
+
+while true
+    participant.age = upper(input('Enter age of participant: ', 's'));
+    if length(participant.age)==2
+        break
+    end
+end
+
+while true
+    participant.gender = upper(input('Enter gender of participant: ', 's'));
+    if length(participant.gender)==1
+        break
+    end
+end
 
 while true
     participant.ID = upper(input('Enter two-digit participant number: ', 's'));
@@ -187,13 +208,13 @@ if newUser
             
             if whichCondnFirst == 1     % Uniform first
                 
-                participant.condnOrder = repmat([1,2],1,9);
-                participant.condnOrder = [participant.condnOrder 1 1];  % Make the final two blocks uniform conditions
+                participant.condnOrder = [repmat(1,1,10) repmat(2,1,9) 1];
+%                 participant.condnOrder = [participant.condnOrder 1 1];  % Make the final two blocks uniform conditions
                 
             elseif whichCondnFirst == 2 % Pattern first
                 
-                participant.condnOrder = repmat([2,1],1,9);
-                participant.condnOrder = [participant.condnOrder 1 1];  % Make the final two blocks uniform conditions
+                participant.condnOrder = [repmat(2,1,9) repmat(1,1,11)];
+%                 participant.condnOrder = [participant.condnOrder 1 1];  % Make the final two blocks uniform conditions
                 
             end     
         
@@ -590,16 +611,16 @@ for thisBlock = 1:experiment.nBlocks
     
     % Completed block text
 
-    if mod(block.thisBlock,4) == 0
+    if mod(block.thisBlock,2) == 0
         
         if block.thisBlock ~= experiment.nBlocks
             
             takeBreakText = ['You have completed ' num2str(block.thisBlock) ' out of ' num2str(experiment.nBlocks) ' blocks.\n\n' ...
-                'Please take a break for a few minutes.'];
+                'Please take a break.'];
 
             DrawFormattedText(ptbWindow,takeBreakText,'center','center',colour.textVal);
             Screen('Flip',ptbWindow);
-            WaitSecs(120);
+            WaitSecs(30);
 
             completedBlockText = ['You have completed ' num2str(block.thisBlock) ' out of ' num2str(experiment.nBlocks) ' blocks.\n\n' ...
                 'Press any key to continue.'];
