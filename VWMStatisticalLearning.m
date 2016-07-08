@@ -20,9 +20,9 @@ experiment.nTrialsPerBlock = 60;    % Number of trials per block
 
 % Set up participant parameters
 
-userDirectory = 'C:\Users\Dirk VU\Documents\MATLAB\Will\VWMStatisticalLearning\UserData';
-saveDirectory = 'C:\Users\Dirk VU\Documents\MATLAB\Will\VWMStatisticalLearning\Data';
-experimentDirectory = 'C:\Users\Dirk VU\Documents\MATLAB\Will\VWMStatisticalLearning';    
+userDirectory = 'C:\Users\AwhVogelLab\Documents\MATLAB\Will\VWMStatisticalLearning\UserData';
+saveDirectory = 'C:\Users\AwhVogelLab\Documents\MATLAB\Will\VWMStatisticalLearning\Data';
+experimentDirectory = 'C:\Users\AwhVogelLab\Documents\MATLAB\Will\VWMStatisticalLearning';    
 
 % Set up equipment parameters
 
@@ -194,11 +194,11 @@ if newUser
         
             if whichShapeFirst == 1
                 
-                participant.shapeOrder = [repmat(1,1,10) repmat(2,1,10)];
+                participant.shapeOrder = repmat([1,2],1,10);
             
             elseif whichShapeFirst == 2
                 
-                participant.shapeOrder = [repmat(2,1,10) repmat(1,1,10)];
+                participant.shapeOrder = repmat([2,1],1,10);
                 
             end
             
