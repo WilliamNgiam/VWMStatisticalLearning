@@ -634,127 +634,7 @@ for thisBlock = 1:experiment.nBlocks
                 waitResponse = 0;
 
             end
-            
-            if block.thisBlock == experiment.nBlocks/2
-                
-                % Test explicit awareness at halfway point
-
-                % % Instruction text
-
-                awarenessText = ['You will be presented with a colour in the middle of the screen.\n\n' ...
-                    'Click on which colour you think appeared most commonly with that colour.\n\n' ...
-                    'Press any key to continue.'];
-
-                DrawFormattedText(ptbWindow,awarenessText,'center','center',colour.textVal);
-                Screen('Flip',ptbWindow);
-                waitResponse = 1;
-
-                while waitResponse
-
-                    [time, keyCode] = KbWait(-1,2);
-                    waitResponse = 0;
-
-                end    
-
-                awareness.responses = [];
-                awareness.firstResponseColours = [];
-
-                for thisTestColour = 1:stimulus.nColours
-
-                    % Retrieve which shape had pattern configurations
-
-                    firstTestShape = whichShapeFirst;
-
-                    % Draw question text above
-
-                    questionText = ['Which colour was most likely to appear with this colour shown?'];
-
-                    DrawFormattedText(ptbWindow,questionText,'center',screenCentreY - 1*stimulus.refEccentricity_pix,colour.textVal);
-
-                    % Present colour in the middle
-
-                    if firstTestShape == 1
-
-                        Screen('FillRect',ptbWindow,[stimulus.colours(thisTestColour,:)],awareRect);
-
-                    elseif firstTestShape == 2
-
-                        Screen('FillOval',ptbWindow,[stimulus.colours(thisTestColour,:)],awareRect);
-
-                    end
-
-                    % Present reference values
-
-                    for thisColour = 1:stimulus.nColours
-
-                        if firstTestShape == 1
-
-                            Screen('FillRect',ptbWindow,stimulus.colours(thisColour,:),refRects(:,thisColour));
-
-                        elseif firstTestShape == 2
-
-                            Screen('FillOval',ptbWindow,stimulus.colours(thisColour,:),refRects(:,thisColour));
-
-                        end
-
-                %         DrawFormattedText(ptbWindow,num2str(thisColour),'center','center',colour.textVal,[],[],[],[],[],numRects(:,thisColour)');
-
-                    end
-
-                    Screen('Flip',ptbWindow);
-
-                    % Record response
-                % For mouse click responses 
-                    ShowCursor;
-                    SetMouse(screenCentreX,screenCentreY,ptbWindow);
-                    CheckResponse = zeros(1,stimulus.nColours);
-
-                    while ~any(CheckResponse)
-
-                        [~,xClickResponse,yClickResponse] = GetClicks(ptbWindow,0);     % Retrieves x- and y-coordinates of mouse click
-                        clickSecs = GetSecs;
-
-                        for thisColour = 1:stimulus.nColours;
-
-                            CheckResponse(thisColour) = IsInRect(xClickResponse,yClickResponse,refRects(:,thisColour));     % Tests if mouse click is inside aperture of each successive item
-
-                        end
-
-                    end
-
-                    responseColour = find(CheckResponse);
-
-                % For keyboard responses    
-                %     waitResponse = 1;
-                %     
-                %     while waitResponse
-                % 
-                %         [keySecs, keyCode] = KbWait(-1,2);
-                %         pressedKey = find(keyCode);
-                % 
-                %         if length(pressedKey) ~= 1
-                %             continue
-                %         end
-                %         
-                %         if isempty(find(equipment.responseKeys == pressedKey)) == 0     % While loop will only break when a response Key is pressed
-                %             waitResponse = 0;
-                %         end
-                % 
-                %     end
-                % 
-                     % Save response
-                % For mouse click responses
-
-                    awareness.firstResponseColours = [awareness.firstResponseColours responseColour];
-
-                % For keyboard responses    
-                %     awareness.responses = [awareness.responses pressedKey];
-                %     awareness.responseColours = [awareness.responseColours pressedKey-29];
-
-                end
-                
-            end
-            
+                                 
         elseif block.thisBlock == experiment.nBlocks
             
             finishAllText = ['You have completed all blocks in the experiment.\n\n' ...
@@ -787,11 +667,127 @@ end
 % % Instruction text
 
 awarenessText = ['You will be presented with a colour in the middle of the screen.\n\n' ...
-    'Click on which colour you think appeared most commonly with that colour.\n\n' ...
+    'Click on which colour you think appeared most commonly with that colour in the first half of the experiment.\n\n' ...
+    'Pay attention to the shape of the colours.\n\n' ...
     'Press any key to continue.'];
 
 DrawFormattedText(ptbWindow,awarenessText,'center','center',colour.textVal);
 Screen('Flip',ptbWindow);
+WaitSecs(15);
+waitResponse = 1;
+
+while waitResponse
+
+    [time, keyCode] = KbWait(-1,2);
+    waitResponse = 0;
+
+end    
+
+awareness.responses = [];
+awareness.firstResponseColours = [];
+
+for thisTestColour = 1:stimulus.nColours
+
+    % Retrieve which shape had pattern configurations
+
+    firstTestShape = whichShapeFirst;
+
+    % Draw question text above
+
+    questionText = ['Which colour was most likely to appear with this colour shown?'];
+
+    DrawFormattedText(ptbWindow,questionText,'center',screenCentreY - 1*stimulus.refEccentricity_pix,colour.textVal);
+
+    % Present colour in the middle
+
+    if firstTestShape == 1
+
+        Screen('FillRect',ptbWindow,[stimulus.colours(thisTestColour,:)],awareRect);
+
+    elseif firstTestShape == 2
+
+        Screen('FillOval',ptbWindow,[stimulus.colours(thisTestColour,:)],awareRect);
+
+    end
+
+    % Present reference values
+
+    for thisColour = 1:stimulus.nColours
+
+        if firstTestShape == 1
+
+            Screen('FillRect',ptbWindow,stimulus.colours(thisColour,:),refRects(:,thisColour));
+
+        elseif firstTestShape == 2
+
+            Screen('FillOval',ptbWindow,stimulus.colours(thisColour,:),refRects(:,thisColour));
+
+        end
+
+%         DrawFormattedText(ptbWindow,num2str(thisColour),'center','center',colour.textVal,[],[],[],[],[],numRects(:,thisColour)');
+
+    end
+
+    Screen('Flip',ptbWindow);
+
+    % Record response
+% For mouse click responses 
+    ShowCursor;
+    SetMouse(screenCentreX,screenCentreY,ptbWindow);
+    CheckResponse = zeros(1,stimulus.nColours);
+
+    while ~any(CheckResponse)
+
+        [~,xClickResponse,yClickResponse] = GetClicks(ptbWindow,0);     % Retrieves x- and y-coordinates of mouse click
+        clickSecs = GetSecs;
+
+        for thisColour = 1:stimulus.nColours;
+
+            CheckResponse(thisColour) = IsInRect(xClickResponse,yClickResponse,refRects(:,thisColour));     % Tests if mouse click is inside aperture of each successive item
+
+        end
+
+    end
+
+    responseColour = find(CheckResponse);
+
+% For keyboard responses    
+%     waitResponse = 1;
+%     
+%     while waitResponse
+% 
+%         [keySecs, keyCode] = KbWait(-1,2);
+%         pressedKey = find(keyCode);
+% 
+%         if length(pressedKey) ~= 1
+%             continue
+%         end
+%         
+%         if isempty(find(equipment.responseKeys == pressedKey)) == 0     % While loop will only break when a response Key is pressed
+%             waitResponse = 0;
+%         end
+% 
+%     end
+% 
+     % Save response
+% For mouse click responses
+
+    awareness.firstResponseColours = [awareness.firstResponseColours responseColour];
+
+% For keyboard responses    
+%     awareness.responses = [awareness.responses pressedKey];
+%     awareness.responseColours = [awareness.responseColours pressedKey-29];
+
+end
+
+secondAwarenessText = ['You will now be presented with the colours in the other shape from the second half of the experiment.\n\n' ...
+    'Click on which colour you think appeared most commonly with that colour.\n\n' ...
+    'Pay attention to the shape of the colours.\n\n' ...
+    'Press any key to continue.'];
+
+DrawFormattedText(ptbWindow,secondAwarenessText,'center','center',colour.textVal);
+Screen('Flip',ptbWindow);
+WaitSecs(15);
 waitResponse = 1;
 
 while waitResponse
