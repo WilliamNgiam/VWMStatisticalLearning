@@ -8,6 +8,9 @@
 % WXQN started piloting on 1/5/16
 % WXQN set up code for UChicago on 22/6/16
 
+% Experiment 1b - This experiment uses alternating condition order
+% (pattern,uniform,pattern,uniform...)
+
 % -------------------------------------------------------------------------
 
 clear all;
@@ -26,7 +29,7 @@ experimentDirectory = 'C:\Users\AwhVogelLab\Documents\MATLAB\Will\VWMStatistical
 
 % Set up equipment parameters
 
-equipment.viewDist = 700;           % Viewing distance in mm
+equipment.viewDist = 500;           % Viewing distance in mm
 equipment.ppm = 3.6;                % Pixels per mm - Measured at UChicago on 22/6/16
 equipment.gammaVals = 1.0./[3.0902 2.4049 2.3194];      % Gamma values for CRT in GT519 (recalibrated 25/9/15)
 
@@ -88,27 +91,6 @@ timing.memory = 1;
 timing.delay = 1;
 
 % Get participant ID
-
-while true
-    participant.initials = upper(input('Enter participant initials: ', 's'));
-    if length(participant.initials)==2
-        break
-    end
-end
-
-while true
-    participant.age = upper(input('Enter age of participant: ', 's'));
-    if length(participant.age)==2
-        break
-    end
-end
-
-while true
-    participant.gender = upper(input('Enter gender of participant: ', 's'));
-    if length(participant.gender)==1
-        break
-    end
-end
 
 while true
     participant.ID = upper(input('Enter two-digit participant number: ', 's'));
@@ -194,11 +176,11 @@ if newUser
         
             if whichShapeFirst == 1
                 
-                participant.shapeOrder = [repmat(1,1,10) repmat(2,1,10)];
+                participant.shapeOrder = repmat([1,2],1,10);
             
             elseif whichShapeFirst == 2
                 
-                participant.shapeOrder = [repmat(2,1,10) repmat(1,1,10)];
+                participant.shapeOrder = repmat([2,1],1,10);
                 
             end
             
@@ -208,13 +190,13 @@ if newUser
             
             if whichCondnFirst == 1     % Uniform first
                 
-                participant.condnOrder = [repmat(1,1,10) repmat(2,1,9) 1];
-%                 participant.condnOrder = [participant.condnOrder 1 1];  % Make the final two blocks uniform conditions
+                participant.condnOrder = repmat([1,2],1,9);
+                participant.condnOrder = [participant.condnOrder 1 1];  % Make the final two blocks uniform conditions
                 
             elseif whichCondnFirst == 2 % Pattern first
                 
-                participant.condnOrder = [repmat(2,1,9) repmat(1,1,11)];
-%                 participant.condnOrder = [participant.condnOrder 1 1];  % Make the final two blocks uniform conditions
+                participant.condnOrder = repmat([2,1],1,9);
+                participant.condnOrder = [participant.condnOrder 1 1];  % Make the final two blocks uniform conditions
                 
             end     
         
@@ -611,16 +593,16 @@ for thisBlock = 1:experiment.nBlocks
     
     % Completed block text
 
-    if mod(block.thisBlock,2) == 0
+    if mod(block.thisBlock,4) == 0
         
         if block.thisBlock ~= experiment.nBlocks
             
             takeBreakText = ['You have completed ' num2str(block.thisBlock) ' out of ' num2str(experiment.nBlocks) ' blocks.\n\n' ...
-                'Please take a break.'];
+                'Please take a break for a few minutes.'];
 
             DrawFormattedText(ptbWindow,takeBreakText,'center','center',colour.textVal);
             Screen('Flip',ptbWindow);
-            WaitSecs(30);
+            WaitSecs(120);
 
             completedBlockText = ['You have completed ' num2str(block.thisBlock) ' out of ' num2str(experiment.nBlocks) ' blocks.\n\n' ...
                 'Press any key to continue.'];
@@ -633,126 +615,6 @@ for thisBlock = 1:experiment.nBlocks
                 [time, keyCode] = KbWait(-1,2);
                 waitResponse = 0;
 
-            end
-            
-            if block.thisBlock == experiment.nBlocks/2
-                
-                % Test explicit awareness at halfway point
-
-                % % Instruction text
-
-                awarenessText = ['You will be presented with a colour in the middle of the screen.\n\n' ...
-                    'Click on which colour you think appeared most commonly with that colour.\n\n' ...
-                    'Press any key to continue.'];
-
-                DrawFormattedText(ptbWindow,awarenessText,'center','center',colour.textVal);
-                Screen('Flip',ptbWindow);
-                waitResponse = 1;
-
-                while waitResponse
-
-                    [time, keyCode] = KbWait(-1,2);
-                    waitResponse = 0;
-
-                end    
-
-                awareness.responses = [];
-                awareness.firstResponseColours = [];
-
-                for thisTestColour = 1:stimulus.nColours
-
-                    % Retrieve which shape had pattern configurations
-
-                    firstTestShape = whichShapeFirst;
-
-                    % Draw question text above
-
-                    questionText = ['Which colour was most likely to appear with this colour shown?'];
-
-                    DrawFormattedText(ptbWindow,questionText,'center',screenCentreY - 1*stimulus.refEccentricity_pix,colour.textVal);
-
-                    % Present colour in the middle
-
-                    if firstTestShape == 1
-
-                        Screen('FillRect',ptbWindow,[stimulus.colours(thisTestColour,:)],awareRect);
-
-                    elseif firstTestShape == 2
-
-                        Screen('FillOval',ptbWindow,[stimulus.colours(thisTestColour,:)],awareRect);
-
-                    end
-
-                    % Present reference values
-
-                    for thisColour = 1:stimulus.nColours
-
-                        if firstTestShape == 1
-
-                            Screen('FillRect',ptbWindow,stimulus.colours(thisColour,:),refRects(:,thisColour));
-
-                        elseif firstTestShape == 2
-
-                            Screen('FillOval',ptbWindow,stimulus.colours(thisColour,:),refRects(:,thisColour));
-
-                        end
-
-                %         DrawFormattedText(ptbWindow,num2str(thisColour),'center','center',colour.textVal,[],[],[],[],[],numRects(:,thisColour)');
-
-                    end
-
-                    Screen('Flip',ptbWindow);
-
-                    % Record response
-                % For mouse click responses 
-                    ShowCursor;
-                    SetMouse(screenCentreX,screenCentreY,ptbWindow);
-                    CheckResponse = zeros(1,stimulus.nColours);
-
-                    while ~any(CheckResponse)
-
-                        [~,xClickResponse,yClickResponse] = GetClicks(ptbWindow,0);     % Retrieves x- and y-coordinates of mouse click
-                        clickSecs = GetSecs;
-
-                        for thisColour = 1:stimulus.nColours;
-
-                            CheckResponse(thisColour) = IsInRect(xClickResponse,yClickResponse,refRects(:,thisColour));     % Tests if mouse click is inside aperture of each successive item
-
-                        end
-
-                    end
-
-                    responseColour = find(CheckResponse);
-
-                % For keyboard responses    
-                %     waitResponse = 1;
-                %     
-                %     while waitResponse
-                % 
-                %         [keySecs, keyCode] = KbWait(-1,2);
-                %         pressedKey = find(keyCode);
-                % 
-                %         if length(pressedKey) ~= 1
-                %             continue
-                %         end
-                %         
-                %         if isempty(find(equipment.responseKeys == pressedKey)) == 0     % While loop will only break when a response Key is pressed
-                %             waitResponse = 0;
-                %         end
-                % 
-                %     end
-                % 
-                     % Save response
-                % For mouse click responses
-
-                    awareness.firstResponseColours = [awareness.firstResponseColours responseColour];
-
-                % For keyboard responses    
-                %     awareness.responses = [awareness.responses pressedKey];
-                %     awareness.responseColours = [awareness.responseColours pressedKey-29];
-
-                end
-                
             end
             
         elseif block.thisBlock == experiment.nBlocks
@@ -802,13 +664,21 @@ while waitResponse
 end    
 
 awareness.responses = [];
-awareness.secondResponseColours = [];
+awareness.responseColours = [];
 
 for thisTestColour = 1:stimulus.nColours
     
     % Retrieve which shape had pattern configurations
     
-    secondTestShape = 3-whichShapeFirst;
+    if whichCondnFirst == 2
+        
+        testShape = whichShapeFirst;
+        
+    elseif whichCondnFirst == 1
+        
+        testShape = 3-whichShapeFirst;
+        
+    end
      
     % Draw question text above
     
@@ -818,11 +688,11 @@ for thisTestColour = 1:stimulus.nColours
     
     % Present colour in the middle
     
-    if secondTestShape == 1
+    if testShape == 1
                                               
         Screen('FillRect',ptbWindow,[stimulus.colours(thisTestColour,:)],awareRect);
 
-    elseif secondTestShape == 2
+    elseif testShape == 2
 
         Screen('FillOval',ptbWindow,[stimulus.colours(thisTestColour,:)],awareRect);
 
@@ -832,11 +702,11 @@ for thisTestColour = 1:stimulus.nColours
     
     for thisColour = 1:stimulus.nColours
                  
-        if secondTestShape == 1
+        if testShape == 1
 
             Screen('FillRect',ptbWindow,stimulus.colours(thisColour,:),refRects(:,thisColour));
 
-        elseif secondTestShape == 2
+        elseif testShape == 2
 
             Screen('FillOval',ptbWindow,stimulus.colours(thisColour,:),refRects(:,thisColour));
 
@@ -890,7 +760,7 @@ for thisTestColour = 1:stimulus.nColours
      % Save response
 % For mouse click responses
 
-    awareness.secondResponseColours = [awareness.secondResponseColours responseColour];
+    awareness.responseColours = [awareness.responseColours responseColour];
 
 % For keyboard responses    
 %     awareness.responses = [awareness.responses pressedKey];
