@@ -173,11 +173,11 @@ if newUser
         
             if whichShapeFirst == 1
                 
-                participant.shapeOrder = [repmat(1,1,10) repmat(2,1,10)];
+                participant.shapeOrder = repmat([1,2],1,10);
             
             elseif whichShapeFirst == 2
                 
-                participant.shapeOrder = [repmat(2,1,10) repmat(1,1,10)];
+                participant.shapeOrder = repmat([2,1],1,10);
                 
             end
             
